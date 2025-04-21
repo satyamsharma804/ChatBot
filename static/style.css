@@ -1,0 +1,33 @@
+/* Custom styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Chat bubble animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#chat-messages > div {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Custom scrollbar */
+#chat-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+#chat-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+#chat-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+#chat-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

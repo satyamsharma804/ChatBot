@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Growth Assistant</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <style>
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .typing-indicator {
+      animation: pulse 1.5s infinite;
+    }
+    .chat-message {
+      max-width: 80%;
+      transition: all 0.3s ease;
+    }
+    .chat-message:hover {
+      transform: translateY(-2px);
+    }
+    #chat-box {
+      scroll-behavior: smooth;
+    }
+    .prose a {
+      color: #3b82f6;
+      text-decoration: underline;
+    }
+    .prose ul, .prose ol {
+      margin-left: 1.25rem;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex flex-col items-center p-4 md:p-8">
+  <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold">Business Growth Assistant</h1>
+          <p class="text-blue-100 mt-1">AI-powered guidance for your local business</p>
+        </div>
+        <div class="bg-white/20 p-3 rounded-full">
+          <i class="fas fa-robot text-2xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Container -->
+    <div class="flex flex-col h-[500px]">
+      <!-- Chat Messages -->
+      <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+        <div class="chat-message">
+          <div class="flex items-start">
+            <div class="bg-indigo-100 p-3 rounded-full mr-3">
+              <i class="fas fa-robot text-indigo-600"></i>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 prose max-w-none">
+              <p>Hello! I'm your business growth assistant. How can I help you today? Here are some ideas:</p>
+              <ul>
+                <li>How can I improve my local SEO?</li>
+                <li>What are low-cost marketing ideas?</li>
+                <li>How to increase customer retention?</li>
+                <li>Best social media strategies for small businesses</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Typing Indicator (Hidden by default) -->
+      <div id="typing-indicator" class="hidden p-4 bg-gray-50 border-t border-gray-200">
+        <div class="flex items-center">
+          <div class="bg-indigo-100 p-2 rounded-full mr-3">
+            <i class="fas fa-robot text-indigo-600 text-sm"></i>
+          </div>
+          <div class="flex space-x-1">
+            <div class="w-2 h-2 bg-gray-400 rounded-full typing-indicator"></div>
+            <div class="w-2 h-2 bg-gray-400 rounded-full typing-indicator" style="animation-delay: 0.2s"></div>
+            <div class="w-2 h-2 bg-gray-400 rounded-full typing-indicator" style="animation-delay: 0.4s"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="border-t border-gray-200 p-4 bg-white">
+        <div class="flex items-center space-x-2">
+          <input
+            id="user-input"
+            type="text"
+            placeholder="Type your business question..."
+            class="flex-1 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+            autocomplete="off"
+          />
+          <button
+            id="send-button"
+            class="bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition-all flex items-center justify-center"
+            onclick="sendMessage()"
+          >
+            <i class="fas fa-paper-plane"></i>
+            <span class="ml-2 hidden md:inline">Send</span>
+          </button>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">Ask about marketing, operations, finance, or any business topic</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    $(document).ready(function() {
+      // Allow sending message with Enter key
+      $('#user-input').keypress(function(e) {
+        if (e.which === 13) {
+          sendMessage();
+        }
+      });
+      
+      // Auto-focus input on page load
+      $('#user-input').focus();
+    });
+
+    async function sendMessage() {
+      const input = $('#user-input');
+      const userMessage = input.val().trim();
+      
+      if (!userMessage) return;
+      
+      // Disable input and button while processing
+      input.prop('disabled', true);
+      $('#send-button').prop('disabled', true);
+      
+      // Add user message to chat
+      addMessage(userMessage, 'user');
+      input.val('');
+      
+      // Show typing indicator
+      $('#typing-indicator').removeClass('hidden');
+      $('#chat-box').scrollTop($('#chat-box')[0].scrollHeight);
+      
+      try {
+        const response = await $.ajax({
+          url: '/chat',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({ message: userMessage })
+        });
+        
+        if (response.error) {
+          throw new Error(response.error);
+        }
+        
+        addMessage(response.reply, 'bot');
+      } catch (error) {
+        addMessage(`Sorry, I encountered an error: ${error.message}`, 'bot-error');
+      } finally {
+        // Hide typing indicator and re-enable input
+        $('#typing-indicator').addClass('hidden');
+        input.prop('disabled', false);
+        $('#send-button').prop('disabled', false);
+        input.focus();
+      }
+    }
+    
+    function addMessage(content, type) {
+      let messageHtml;
+      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      if (type === 'user') {
+        messageHtml = `
+          <div class="chat-message flex justify-end">
+            <div class="flex items-end max-w-xs md:max-w-md">
+              <span class="text-xs text-gray-500 mr-2 mb-1">${timestamp}</span>
+              <div class="bg-indigo-600 text-white p-3 rounded-lg rounded-br-none">
+                ${content}
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        const bgColor = type === 'bot-error' ? 'bg-red-100 border-red-200' : 'bg-white border-gray-200';
+        messageHtml = `
+          <div class="chat-message">
+            <div class="flex items-start">
+              <div class="bg-indigo-100 p-2 rounded-full mr-3">
+                <i class="fas fa-robot text-indigo-600 text-sm"></i>
+              </div>
+              <div class="${bgColor} p-4 rounded-lg shadow-sm border ${type === 'bot-error' ? 'border-red-200' : 'border-gray-200'} prose max-w-none">
+                ${content}
+                <div class="text-xs text-gray-500 mt-2">${timestamp}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      $('#chat-box').append(messageHtml);
+      $('#chat-box').scrollTop($('#chat-box')[0].scrollHeight);
+    }
+  </script>
+</body>
+</html>
